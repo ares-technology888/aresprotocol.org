@@ -29,20 +29,7 @@ export default function Contact() {
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase
-        .from('app_57930cd727_contact_messages')
-        .insert([{
-          name: formData.name,
-          email: formData.email,
-          company: formData.company || null,
-          service: formData.service || null,
-          industry: formData.industry || null,
-          message: formData.message,
-        }]);
-
-      if (error) throw error;
-
-      // Send to Notion
+      // Send to Notion (primary data storage)
       await sendToNotion({
         type: 'contact',
         ...formData
