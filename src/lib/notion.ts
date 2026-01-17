@@ -24,10 +24,14 @@ export const sendToNotion = async (data: any) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Notion webhook error:', errorText);
-    } else {
-      console.log('Successfully sent to Notion');
+      throw new Error(`Failed to send to Notion: ${errorText}`);
     }
+    
+    const result = await response.json();
+    console.log('Successfully sent to Notion:', result);
+    return result;
   } catch (error) {
     console.error('Error sending to Notion:', error);
+    throw error; // Re-throw so the calling code knows it failed
   }
 };
