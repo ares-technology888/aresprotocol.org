@@ -64,27 +64,12 @@ export default function Booking() {
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase
-        .from('app_57930cd727_appointments')
-        .insert([
-          {
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone || null,
-            company: formData.company || null,
-            service: formData.service,
-            preferred_date: format(date, 'yyyy-MM-dd'),
-            preferred_time: formData.preferredTime,
-            message: formData.message || null,
-          }
-        ]);
-
-      if (error) throw error;
-
-      // Send to Notion
+      // Send to Notion (primary data storage)
       await sendToNotion({
         type: 'appointment',
         ...formData,
+        service: formData.service,
+        preferredTime: formData.preferredTime,
         date: format(date, 'yyyy-MM-dd')
       });
 
