@@ -300,6 +300,13 @@ export default function Index() {
                   <p className="text-sm text-gray-600 dark:text-gray-400">Model risk and accountability frameworks</p>
                 </div>
               </div>
+              <div className="flex items-start gap-3">
+                <CheckCircle className="h-6 w-6 text-blue-600 flex-shrink-0" />
+                <div>
+                  <h4 className="font-semibold mb-1">ISO 42001</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">AI management system certification standard</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
