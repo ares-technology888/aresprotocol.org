@@ -86,13 +86,17 @@ export default function Booking() {
       }
 
       // Send to Notion (primary data storage)
-      await sendToNotion({
+      const notionResult = await sendToNotion({
         type: 'appointment',
         ...formData,
         service: formData.service,
         preferredTime: formData.preferredTime,
         date: format(date, 'yyyy-MM-dd')
       });
+
+      if (notionResult && notionResult.success === false) {
+        throw new Error('Failed to send to Notion: ' + (notionResult.error || 'Unknown error'));
+      }
 
       setIsSuccess(true);
       toast.success('Appointment request submitted successfully!');
@@ -233,7 +237,7 @@ export default function Booking() {
                         className="w-full justify-start text-left font-normal"
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {date ? format(date, 'PPP') : 'Pick a date'}
+                        {date ? format(date, 'PPP') : <span>Pick a date</span>}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -241,14 +245,13 @@ export default function Booking() {
                         mode="single"
                         selected={date}
                         onSelect={setDate}
-                        disabled={(date) => date < new Date()}
                         initialFocus
                       />
                     </PopoverContent>
                   </Popover>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="preferredTime">Preferred Time *</Label>
                   <Select
                     required
@@ -270,38 +273,31 @@ export default function Booking() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="message">Additional Information</Label>
+                  <Textarea
+                    id="message"
+                    value={formData.message}
+                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                    placeholder="Tell us more about your needs..."
+                    rows={4}
+                  />
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="message">Additional Information</Label>
-                <Textarea
-                  id="message"
-                  value={formData.message}
-                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  placeholder="Tell us about your project or any specific questions you have..."
-                  rows={4}
-                />
-              </div>
-
-              <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? 'Submitting...' : 'Request Appointment'}
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Submitting...' : 'Schedule Appointment'}
               </Button>
             </form>
-          </CardContent>
-        </Card>
-
-        <Card className="mt-8 bg-blue-50 border-blue-200">
-          <CardContent className="pt-6">
-            <h3 className="font-semibold mb-2">What happens next?</h3>
-            <ul className="space-y-2 text-sm text-gray-600">
-              <li>• Our team will review your appointment request within 24 hours</li>
-              <li>• You'll receive a confirmation email with meeting details</li>
-              <li>• A calendar invite will be sent to your email</li>
-              <li>• We'll prepare relevant materials based on your service selection</li>
-            </ul>
           </CardContent>
         </Card>
       </div>
     </div>
   );
 }
+
