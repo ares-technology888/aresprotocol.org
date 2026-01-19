@@ -2,7 +2,7 @@
 const SUPABASE_URL = 'https://jjfzfktoyctxdqnzmvot.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqZnpma3RveWN0eGRxbnptdm90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDE2NDYsImV4cCI6MjA4MzkxNzY0Nn0.jAeZyfMa0t-7YMeAodQ8q-jUyHF6dBqF591ITvCaArw';
 
-export const sendToNotion = async (data: any) => {
+export const sendToNotion = async (data: any ) => {
   console.log('Sending data to Notion via Edge Function:', data);
   
   try {
@@ -32,6 +32,8 @@ export const sendToNotion = async (data: any) => {
     return result;
   } catch (error) {
     console.error('Error sending to Notion:', error);
-    throw error; // Re-throw so the calling code knows it failed
+    // Don't throw - allow form submission to succeed even if Notion fails
+    return { success: false, error: String(error) };
   }
 };
+
