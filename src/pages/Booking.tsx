@@ -64,6 +64,27 @@ export default function Booking() {
     setIsSubmitting(true);
 
     try {
+      // Save to Supabase database
+      const { error: dbError } = await supabase
+        .from('app_57930cd727_appointments')
+        .insert([
+          {
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            company: formData.company,
+            service: formData.service,
+            preferred_date: format(date, 'yyyy-MM-dd'),
+            preferred_time: formData.preferredTime,
+            message: formData.message,
+          },
+        ]);
+
+      if (dbError) {
+        console.error('Supabase error:', dbError);
+        // Continue anyway - Notion is primary
+      }
+
       // Send to Notion (primary data storage)
       await sendToNotion({
         type: 'appointment',
