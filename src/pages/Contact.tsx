@@ -1,3 +1,5 @@
+
+Contact.tsx
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,6 +31,25 @@ export default function Contact() {
     setIsSubmitting(true);
 
     try {
+      // Save to Supabase database
+      const { error: dbError } = await supabase
+        .from('app_57930cd727_contact_messages')
+        .insert([
+          {
+            name: formData.name,
+            email: formData.email,
+            company: formData.company,
+            service: formData.service,
+            industry: formData.industry,
+            message: formData.message,
+          },
+        ]);
+
+      if (dbError) {
+        console.error('Supabase error:', dbError);
+        // Continue anyway - Notion is primary
+      }
+
       // Send to Notion (primary data storage)
       await sendToNotion({
         type: 'contact',
@@ -115,7 +136,7 @@ export default function Contact() {
             <CardContent className="pt-6 text-center">
               <Mail className="h-12 w-12 text-blue-600 mx-auto mb-4" />
               <h3 className="font-semibold mb-2">Email</h3>
-              <p className="text-gray-600 dark:text-gray-400">areststechnology.io@proton.me</p>
+              <p className="text-gray-600 dark:text-gray-400">arestechnology.io@proton.me</p>
             </CardContent>
           </Card>
 
