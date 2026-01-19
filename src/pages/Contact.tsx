@@ -1,5 +1,3 @@
-
-Contact.tsx
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -51,10 +49,14 @@ export default function Contact() {
       }
 
       // Send to Notion (primary data storage)
-      await sendToNotion({
+      const notionResult = await sendToNotion({
         type: 'contact',
         ...formData
       });
+
+      if (notionResult && notionResult.success === false) {
+        throw new Error('Failed to send to Notion: ' + (notionResult.error || 'Unknown error'));
+      }
 
       setIsSuccess(true);
       toast.success('Message sent successfully!');
@@ -201,9 +203,8 @@ export default function Contact() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="service">Service Interest *</Label>
+                  <Label htmlFor="service">Service Interest</Label>
                   <Select
-                    required
                     value={formData.service}
                     onValueChange={(value) => setFormData({ ...formData, service: value })}
                   >
@@ -211,16 +212,18 @@ export default function Contact() {
                       <SelectValue placeholder="Select a service" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="custom-governance-gpts">Custom Governance GPTs</SelectItem>
-                      <SelectItem value="nephilim-governance-gpt">Nephilim Governance GPT</SelectItem>
-                      <SelectItem value="sector-specific-assistants">Sector-Specific Governance Assistants</SelectItem>
-                      <SelectItem value="enterprise-tooling">Enterprise Governance Tooling (Early Access)</SelectItem>
-                      <SelectItem value="general">General Inquiry</SelectItem>
+                      <SelectItem value="AI Governance Audit">AI Governance Audit</SelectItem>
+                      <SelectItem value="Compliance Consulting">Compliance Consulting</SelectItem>
+                      <SelectItem value="Governance GPT Access">Governance GPT Access</SelectItem>
+                      <SelectItem value="AI Integration Services">AI Integration Services</SelectItem>
+                      <SelectItem value="Intelligent Automation">Intelligent Automation</SelectItem>
+                      <SelectItem value="AI Strategy Consulting">AI Strategy Consulting</SelectItem>
+                      <SelectItem value="General Inquiry">General Inquiry</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                <div className="space-y-2 md:col-span-2">
+                <div className="space-y-2">
                   <Label htmlFor="industry">Industry</Label>
                   <Select
                     value={formData.industry}
@@ -230,100 +233,41 @@ export default function Contact() {
                       <SelectValue placeholder="Select your industry" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="finance">Financial Services</SelectItem>
-                      <SelectItem value="healthcare">Healthcare</SelectItem>
-                      <SelectItem value="public-sector">Public Sector</SelectItem>
-                      <SelectItem value="infrastructure">Critical Infrastructure</SelectItem>
-                      <SelectItem value="legal">Legal</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
+                      <SelectItem value="Financial Services">Financial Services</SelectItem>
+                      <SelectItem value="Healthcare">Healthcare</SelectItem>
+                      <SelectItem value="Technology">Technology</SelectItem>
+                      <SelectItem value="Manufacturing">Manufacturing</SelectItem>
+                      <SelectItem value="Retail">Retail</SelectItem>
+                      <SelectItem value="Government">Government</SelectItem>
+                      <SelectItem value="Education">Education</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="message">Message *</Label>
+                  <Textarea
+                    id="message"
+                    required
+                    value={formData.message}
+                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                    placeholder="Tell us about your AI governance needs..."
+                    rows={6}
+                  />
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="message">Message *</Label>
-                <Textarea
-                  id="message"
-                  required
-                  value={formData.message}
-                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  placeholder="Describe your governance use case, regulatory context, and the type of AI system you are overseeing."
-                  rows={6}
-                />
-              </div>
-
-              <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? 'Sending...' : 'Request Governance Consultation'}
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Sending...' : 'Send Message'}
               </Button>
-
-              <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-4">
-                ARES provides governance and evaluation support tools. All services are advisory in nature and intended to support — not replace — professional judgment and regulatory obligations.
-              </p>
             </form>
           </CardContent>
         </Card>
-
-        <div className="max-w-3xl mx-auto mt-12">
-          <Card>
-            <CardHeader>
-              <CardTitle>What We Offer</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <h3 className="font-semibold text-lg mb-2">Custom Governance GPTs</h3>
-                <ul className="list-disc list-inside text-gray-600 dark:text-gray-400 space-y-1">
-                  <li>Purpose-built GPTs for AI governance, risk assessment, and regulatory interpretation</li>
-                  <li>Configured for specific sectors (finance, healthcare, public sector, infrastructure)</li>
-                  <li>Operate under defined constraints and documented governance rules</li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-lg mb-2">Nephilim Governance GPT</h3>
-                <ul className="list-disc list-inside text-gray-600 dark:text-gray-400 space-y-1">
-                  <li>Governance-focused GPT aligned with evaluation, boundary enforcement, and oversight principles</li>
-                  <li>Designed to support internal review, documentation drafting, and policy interpretation</li>
-                  <li>Not an autonomous system; operates as a decision-support and governance aid</li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-lg mb-2">Sector-Specific Governance Assistants</h3>
-                <ul className="list-disc list-inside text-gray-600 dark:text-gray-400 space-y-1">
-                  <li>Custom GPTs tailored to sector-specific regulatory contexts</li>
-                  <li>Examples include financial services governance, healthcare compliance support, and public-sector AI oversight</li>
-                  <li>Scoped and reviewed per client requirements</li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-lg mb-2">Enterprise Governance Tooling (Early Access)</h3>
-                <ul className="list-disc list-inside text-gray-600 dark:text-gray-400 space-y-1">
-                  <li>Integration of governance GPTs into internal workflows</li>
-                  <li>Human-in-the-loop configurations</li>
-                  <li>Custom access controls and usage boundaries</li>
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="max-w-3xl mx-auto mt-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Who This Is For</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="list-disc list-inside text-gray-600 dark:text-gray-400 space-y-2">
-                <li>Regulated enterprises deploying or overseeing AI systems</li>
-                <li>Compliance, risk, and governance teams</li>
-                <li>Legal and audit professionals supporting AI oversight</li>
-                <li>Public sector and critical infrastructure organisations</li>
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </div>
   );
