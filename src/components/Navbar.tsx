@@ -21,12 +21,12 @@ export default function Navbar() {
           <div className="flex items-center">
             <Link to="/" className="flex items-center gap-3">
               <img 
-                src="/images/ARES.jpg" 
+                src="/images/ARES-GOVERNANCE.jpg" 
                 alt="ARES Logo" 
                 className="h-10 w-auto hidden dark:block"
               />
               <img 
-                src="/images/ARES.jpg" 
+                src="/images/ARES-GOVERNANCE.jpg" 
                 alt="ARES Logo" 
                 className="h-10 w-auto dark:hidden"
               />
@@ -196,7 +196,6 @@ export default function Navbar() {
                 Compliance Monitoring
               </Button>
             </Link>
-            <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
             <div className="px-3 py-2 text-sm font-semibold text-gray-500 dark:text-gray-400">AI Development</div>
             <Link to="/ai-development" onClick={() => setIsOpen(false)}>
               <Button variant="ghost" className="w-full justify-start pl-6">
@@ -204,29 +203,29 @@ export default function Navbar() {
                 AI Development Services
               </Button>
             </Link>
-            <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
             <Link to="/pricing" onClick={() => setIsOpen(false)}>
               <Button variant="ghost" className="w-full justify-start">
                 Pricing
               </Button>
             </Link>
+            <div className="px-3 py-2 text-sm font-semibold text-gray-500 dark:text-gray-400">Resources</div>
             <Link to="/blog" onClick={() => setIsOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start">
+              <Button variant="ghost" className="w-full justify-start pl-6">
                 Blog & Insights
               </Button>
             </Link>
             <Link to="/case-studies" onClick={() => setIsOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start">
+              <Button variant="ghost" className="w-full justify-start pl-6">
                 Service Engagements
               </Button>
             </Link>
             <Link to="/testimonials" onClick={() => setIsOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start">
+              <Button variant="ghost" className="w-full justify-start pl-6">
                 Testimonials
               </Button>
             </Link>
             <Link to="/faq" onClick={() => setIsOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start">
+              <Button variant="ghost" className="w-full justify-start pl-6">
                 FAQ
               </Button>
             </Link>
@@ -241,7 +240,7 @@ export default function Navbar() {
               </Button>
             </Link>
             <Link to="/booking" onClick={() => setIsOpen(false)}>
-              <Button className="w-full">Book Consultation</Button>
+              <Button className="w-full mt-2">Book Consultation</Button>
             </Link>
           </div>
         </div>
