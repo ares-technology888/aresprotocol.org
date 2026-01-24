@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -5,8 +6,60 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, X, Zap, Building2, Rocket, Shield } from 'lucide-react';
 import Navbar from '@/components/Navbar';
+import { sendToNotion } from '@/lib/notion';
+import { toast } from 'sonner';
 
 export default function Pricing() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    company: '',
+    plan: '',
+    usage: '',
+    message: '',
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const notionResult = await sendToNotion({
+        type: 'pricing',
+        name: `${formData.firstName} ${formData.lastName}`.trim(),
+        email: formData.email,
+        company: formData.company,
+        message: `Plan Interest: ${formData.plan}\nExpected Usage: ${formData.usage}\n\n${formData.message}`,
+      });
+
+      if (notionResult && notionResult.success === false) {
+        throw new Error('Failed to send to Notion: ' + (notionResult.error || 'Unknown error'));
+      }
+
+      setIsSuccess(true);
+      toast.success('Inquiry submitted successfully! We\'ll be in touch soon.');
+
+      // Reset form
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        company: '',
+        plan: '',
+        usage: '',
+        message: '',
+      });
+    } catch (error) {
+      console.error('Error submitting pricing inquiry:', error);
+      toast.error('Failed to submit inquiry. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const scrollToContactForm = () => {
     const contactForm = document.getElementById('contact-form');
     if (contactForm) {
@@ -130,10 +183,33 @@ export default function Pricing() {
     },
   ];
 
+  // Success state for form
+  if (isSuccess) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+          <Card className="text-center">
+            <CardContent className="pt-12 pb-12">
+              <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-6" />
+              <h2 className="text-3xl font-bold mb-4">Inquiry Received!</h2>
+              <p className="text-gray-600 mb-8">
+                Thank you for your interest in ARES. Our team will review your inquiry and contact you within 24 hours.
+              </p>
+              <Button onClick={() => setIsSuccess(false)}>
+                Submit Another Inquiry
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="text-center mb-16">
@@ -148,8 +224,8 @@ export default function Pricing() {
         {/* Pricing Cards */}
         <div className="grid md:grid-cols-3 gap-8 mb-20">
           {plans.map((plan, index) => (
-            <Card 
-              key={index} 
+            <Card
+              key={index}
               className={`relative ${plan.highlighted ? 'border-blue-500 border-2 shadow-xl' : ''}`}
             >
               {plan.highlighted && (
@@ -157,7 +233,7 @@ export default function Pricing() {
                   <Badge className="bg-blue-500 text-white px-4 py-1">Most Popular</Badge>
                 </div>
               )}
-              
+
               <CardHeader>
                 <div className="flex items-center gap-3 mb-4">
                   <div className={`p-3 rounded-lg ${plan.highlighted ? 'bg-blue-100' : 'bg-gray-100'}`}>
@@ -183,16 +259,16 @@ export default function Pricing() {
                 )}
                 <CardDescription>{plan.description}</CardDescription>
               </CardHeader>
-              
+
               <CardContent className="space-y-6">
-                <Button 
+                <Button
                   className={`w-full ${plan.highlighted ? '' : 'variant-outline'}`}
                   size="lg"
                   onClick={plan.onClick}
                 >
                   {plan.cta}
                 </Button>
-                
+
                 <div className="space-y-3">
                   <p className="font-semibold text-sm">What's included:</p>
                   {plan.features.map((feature, idx) => (
@@ -201,7 +277,7 @@ export default function Pricing() {
                       <span className="text-sm">{feature}</span>
                     </div>
                   ))}
-                  
+
                   {plan.limitations.length > 0 && (
                     <>
                       <p className="font-semibold text-sm mt-4">Limitations:</p>
@@ -232,7 +308,7 @@ export default function Pricing() {
               <p className="text-gray-700">
                 Governance GPTs aren't just AI tools—they're specialized governance infrastructure designed for regulated environments where compliance, accountability, and transparency are non-negotiable.
               </p>
-              
+
               <div className="grid md:grid-cols-2 gap-6 mt-6">
                 <div className="space-y-3">
                   <h3 className="font-semibold text-lg text-blue-900">Targeted Governance Workflows</h3>
@@ -240,21 +316,21 @@ export default function Pricing() {
                     Unlike generic LLMs, Governance GPTs are purpose-built for AI governance readiness, regulatory mapping, evidence generation, and audit preparation—delivering professional artifacts that meet institutional standards.
                   </p>
                 </div>
-                
+
                 <div className="space-y-3">
                   <h3 className="font-semibold text-lg text-blue-900">Market-Aligned Value</h3>
                   <p className="text-sm text-gray-700">
                     Enterprise GRC platforms often exceed £100,000+ annually. Our pricing reflects the specialized nature of AI governance tooling while remaining accessible to teams at different scales.
                   </p>
                 </div>
-                
+
                 <div className="space-y-3">
                   <h3 className="font-semibold text-lg text-blue-900">Beyond Access—Deliverables</h3>
                   <p className="text-sm text-gray-700">
                     You're not just paying for LLM interactions—you're investing in governance artefact packages, readiness review reports, AI Act mapping modules, and ongoing assurance monitoring.
                   </p>
                 </div>
-                
+
                 <div className="space-y-3">
                   <h3 className="font-semibold text-lg text-blue-900">Regulated Sector Focus</h3>
                   <p className="text-sm text-gray-700">
@@ -351,53 +427,88 @@ export default function Pricing() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium mb-2 block">First Name</label>
-                    <Input placeholder="John" />
+                    <label className="text-sm font-medium mb-2 block">First Name *</label>
+                    <Input
+                      placeholder="John"
+                      required
+                      value={formData.firstName}
+                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                    />
                   </div>
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Last Name</label>
-                    <Input placeholder="Doe" />
+                    <label className="text-sm font-medium mb-2 block">Last Name *</label>
+                    <Input
+                      placeholder="Doe"
+                      required
+                      value={formData.lastName}
+                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    />
                   </div>
                 </div>
-                
+
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Work Email</label>
-                  <Input type="email" placeholder="john.doe@company.com" />
-                </div>
-                
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Company Name</label>
-                  <Input placeholder="Acme Inc." />
-                </div>
-                
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Plan Interest</label>
-                  <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">Select a plan</option>
-                    <option value="starter">Starter - £175/month (30-day free trial)</option>
-                    <option value="pro">Pro - £350-£1,250/month</option>
-                    <option value="enterprise">Enterprise - Custom pricing</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Expected Monthly Usage</label>
-                  <Input placeholder="e.g., 100,000 governance evaluations" />
-                </div>
-                
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Message</label>
-                  <Textarea 
-                    placeholder="Tell us about your governance requirements and use case..."
-                    rows={4}
+                  <label className="text-sm font-medium mb-2 block">Work Email *</label>
+                  <Input
+                    type="email"
+                    placeholder="john.doe@company.com"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   />
                 </div>
-                
-                <Button className="w-full" size="lg">
-                  Submit Inquiry
+
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Company Name</label>
+                  <Input
+                    placeholder="Acme Inc."
+                    value={formData.company}
+                    onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Plan Interest</label>
+                  <select
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={formData.plan}
+                    onChange={(e) => setFormData({ ...formData, plan: e.target.value })}
+                  >
+                    <option value="">Select a plan</option>
+                    <option value="Starter - £175/month (30-day free trial)">Starter - £175/month (30-day free trial)</option>
+                    <option value="Pro - £350-£1,250/month">Pro - £350-£1,250/month</option>
+                    <option value="Enterprise - Custom pricing">Enterprise - Custom pricing</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Expected Monthly Usage</label>
+                  <Input
+                    placeholder="e.g., 100,000 governance evaluations"
+                    value={formData.usage}
+                    onChange={(e) => setFormData({ ...formData, usage: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Message</label>
+                  <Textarea
+                    placeholder="Tell us about your governance requirements and use case..."
+                    rows={4}
+                    value={formData.message}
+                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full"
+                  size="lg"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Submitting...' : 'Submit Inquiry'}
                 </Button>
               </form>
             </CardContent>

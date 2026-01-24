@@ -6,15 +6,17 @@ export const sendToNotion = async (data: any ) => {
   console.log('Sending data to Notion via Edge Function:', data);
   
   try {
-    const payload = {
+    // Build payload with null for empty optional fields (Notion API requires null, not empty strings)
+    const payload: Record<string, string | null> = {
       name: data.name,
       email: data.email,
-      company: data.company || '',
-      message: data.message || `Appointment request for ${data.service} on ${data.date} at ${data.preferredTime}`,
-      phone: data.phone || '',
-      service: data.service || '',
-      preferredTime: data.preferredTime || '',
-      date: data.date || ''
+      company: data.company || null,
+      message: data.message || (data.service ? `Appointment request for ${data.service} on ${data.date} at ${data.preferredTime}` : null),
+      phone: data.phone || null,
+      service: data.service || null,
+      preferredTime: data.preferredTime || null,
+      date: data.date || null,
+      industry: data.industry || null
     };
 
     console.log('Payload being sent:', payload);
