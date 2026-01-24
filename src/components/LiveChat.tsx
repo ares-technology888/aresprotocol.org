@@ -35,7 +35,7 @@ export default function LiveChat() {
     // Load existing messages
     const loadMessages = async () => {
       const { data, error } = await supabase
-        .from('app_138c0b9c8f_chat_messages')
+        .from('app_57930cd727_chat_messages')
         .select('*')
         .eq('session_id', sessionId)
         .order('created_at', { ascending: true });
@@ -58,7 +58,7 @@ export default function LiveChat() {
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'app_138c0b9c8f_chat_messages',
+          table: 'app_57930cd727_chat_messages',
           filter: `session_id=eq.${sessionId}`,
         },
         (payload) => {
@@ -91,7 +91,7 @@ export default function LiveChat() {
 
       // Save user message
       const { data: userData, error: userError } = await supabase
-        .from('app_138c0b9c8f_chat_messages')
+        .from('app_57930cd727_chat_messages')
         .insert([
           {
             session_id: sessionId,
@@ -117,7 +117,7 @@ export default function LiveChat() {
       console.log('Calling AI function...');
 
       // Call AI chat function
-      const { data, error } = await supabase.functions.invoke('app_138c0b9c8f_ai_chat', {
+      const { data, error } = await supabase.functions.invoke('app_57930cd727_ai_chat', {
         body: {
           session_id: sessionId,
           message: userMessage,
@@ -138,7 +138,7 @@ export default function LiveChat() {
         
         // Reload messages to ensure we have the latest
         const { data: latestMessages, error: reloadError } = await supabase
-          .from('app_138c0b9c8f_chat_messages')
+          .from('app_57930cd727_chat_messages')
           .select('*')
           .eq('session_id', sessionId)
           .order('created_at', { ascending: true });
