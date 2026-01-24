@@ -19,12 +19,15 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center">
+            <Link to="/" className="flex items-center gap-3">
               <img
                 src="/images/IMG_6035_2.JPG"
-                alt="ARES AI Governance"
+                alt="ARES Logo"
                 className="h-10 w-auto object-contain"
               />
+              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                ARES
+              </span>
             </Link>
           </div>
 
