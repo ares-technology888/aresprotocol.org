@@ -91,6 +91,18 @@ export default function About() {
       program: 'AI Ethics & Law',
       image: '/assets/certifications/open-university.png',
       description: 'Ethical & Responsible Use of Generative AI, Understanding Generative AI Law, Navigating Risk Management'
+    },
+    {
+      name: 'IBM',
+      program: 'Certified AI Specialist',
+      image: '/assets/certifications/ibm.png',
+      description: 'AI prompting, AI integration, career applications, and advanced AI implementation strategies'
+    },
+    {
+      name: 'Google',
+      program: 'Prompting Specialist',
+      image: '/assets/certifications/google.png',
+      description: 'Advanced prompt engineering, structured prompting techniques, and AI output optimization'
     }
   ];
 
