@@ -124,9 +124,10 @@ export default function Navbar() {
                 <DropdownMenuItem asChild>
                   <Link to="/case-studies" className="w-full">Service Engagements</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
+{/* Testimonials section - hidden until real testimonials are added */}
+                {/* <DropdownMenuItem asChild>
                   <Link to="/testimonials" className="w-full">Testimonials</Link>
-                </DropdownMenuItem>
+                </DropdownMenuItem> */}
                 <DropdownMenuItem asChild>
                   <Link to="/faq" className="w-full">FAQ</Link>
                 </DropdownMenuItem>
@@ -214,11 +215,12 @@ export default function Navbar() {
                 Service Engagements
               </Button>
             </Link>
-            <Link to="/testimonials" onClick={() => setIsOpen(false)}>
+{/* Testimonials section - hidden until real testimonials are added */}
+            {/* <Link to="/testimonials" onClick={() => setIsOpen(false)}>
               <Button variant="ghost" className="w-full justify-start pl-6">
                 Testimonials
               </Button>
-            </Link>
+            </Link> */}
             <Link to="/faq" onClick={() => setIsOpen(false)}>
               <Button variant="ghost" className="w-full justify-start pl-6">
                 FAQ

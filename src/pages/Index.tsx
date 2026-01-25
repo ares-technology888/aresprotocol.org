@@ -402,7 +402,8 @@ export default function Index() {
               <ul className="space-y-2 text-sm">
                 <li><Link to="/about" className="hover:text-white transition-colors">About</Link></li>
                 <li><Link to="/case-studies" className="hover:text-white transition-colors">Case Studies</Link></li>
-                <li><Link to="/testimonials" className="hover:text-white transition-colors">Testimonials</Link></li>
+                {/* Testimonials link - hidden until real testimonials are added */}
+                {/* <li><Link to="/testimonials" className="hover:text-white transition-colors">Testimonials</Link></li> */}
                 <li><Link to="/contact" className="hover:text-white transition-colors">Contact</Link></li>
               </ul>
             </div>
