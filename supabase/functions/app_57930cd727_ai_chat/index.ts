@@ -1,9 +1,67 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import OpenAI from 'npm:openai';
 
+// Rate limiting configuration
+const RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 10; // 10 requests per minute per IP
+
+// In-memory rate limit store (resets on function cold start)
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+
+// Clean up expired entries periodically
+const cleanupRateLimitStore = () => {
+  const now = Date.now();
+  for (const [key, value] of rateLimitStore.entries()) {
+    if (now > value.resetTime) {
+      rateLimitStore.delete(key);
+    }
+  }
+};
+
+// Check rate limit for an IP
+const checkRateLimit = (ip: string): { allowed: boolean; remaining: number; resetIn: number } => {
+  cleanupRateLimitStore();
+  const now = Date.now();
+  const record = rateLimitStore.get(ip);
+
+  if (!record || now > record.resetTime) {
+    // First request or window expired - create new record
+    rateLimitStore.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+    return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS - 1, resetIn: RATE_LIMIT_WINDOW_MS };
+  }
+
+  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
+    // Rate limit exceeded
+    return { allowed: false, remaining: 0, resetIn: record.resetTime - now };
+  }
+
+  // Increment counter
+  record.count++;
+  return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS - record.count, resetIn: record.resetTime - now };
+};
+
+// Get client IP from request headers
+const getClientIP = (req: Request): string => {
+  // Check various headers that might contain the real IP
+  const forwardedFor = req.headers.get('x-forwarded-for');
+  if (forwardedFor) {
+    return forwardedFor.split(',')[0].trim();
+  }
+  const realIP = req.headers.get('x-real-ip');
+  if (realIP) {
+    return realIP;
+  }
+  const cfConnectingIP = req.headers.get('cf-connecting-ip');
+  if (cfConnectingIP) {
+    return cfConnectingIP;
+  }
+  return 'unknown';
+};
+
 Deno.serve(async (req) => {
   const requestId = crypto.randomUUID();
-  console.log(`[${requestId}] AI Chat request received - Method: ${req.method}`);
+  const clientIP = getClientIP(req);
+  console.log(`[${requestId}] AI Chat request received - Method: ${req.method} - IP: ${clientIP}`);
 
   if (req.method === 'OPTIONS') {
     return new Response(null, {
@@ -13,6 +71,29 @@ Deno.serve(async (req) => {
         'Access-Control-Allow-Headers': '*',
       },
     });
+  }
+
+  // Check rate limit
+  const rateLimit = checkRateLimit(clientIP);
+  if (!rateLimit.allowed) {
+    console.warn(`[${requestId}] Rate limit exceeded for IP: ${clientIP}`);
+    return new Response(
+      JSON.stringify({
+        error: 'Too many requests. Please wait before sending another message.',
+        retryAfter: Math.ceil(rateLimit.resetIn / 1000)
+      }),
+      {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Retry-After': Math.ceil(rateLimit.resetIn / 1000).toString(),
+          'X-RateLimit-Limit': RATE_LIMIT_MAX_REQUESTS.toString(),
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': Math.ceil(rateLimit.resetIn / 1000).toString(),
+        },
+      }
+    );
   }
 
   try {
@@ -186,7 +267,7 @@ Keep responses professional, concise, and within the boundaries defined above.`;
     console.log(`[${requestId}] AI response saved successfully`);
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         success: true,
         response: aiResponse
       }),
@@ -195,6 +276,8 @@ Keep responses professional, concise, and within the boundaries defined above.`;
         headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
+          'X-RateLimit-Limit': RATE_LIMIT_MAX_REQUESTS.toString(),
+          'X-RateLimit-Remaining': rateLimit.remaining.toString(),
         },
       }
     );

@@ -1,6 +1,51 @@
+// Rate limiting configuration for form submissions
+const RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 5; // 5 form submissions per minute per IP
+
+// In-memory rate limit store
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+
+const cleanupRateLimitStore = () => {
+  const now = Date.now();
+  for (const [key, value] of rateLimitStore.entries()) {
+    if (now > value.resetTime) {
+      rateLimitStore.delete(key);
+    }
+  }
+};
+
+const checkRateLimit = (ip: string): { allowed: boolean; resetIn: number } => {
+  cleanupRateLimitStore();
+  const now = Date.now();
+  const record = rateLimitStore.get(ip);
+
+  if (!record || now > record.resetTime) {
+    rateLimitStore.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+    return { allowed: true, resetIn: RATE_LIMIT_WINDOW_MS };
+  }
+
+  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return { allowed: false, resetIn: record.resetTime - now };
+  }
+
+  record.count++;
+  return { allowed: true, resetIn: record.resetTime - now };
+};
+
+const getClientIP = (req: Request): string => {
+  const forwardedFor = req.headers.get('x-forwarded-for');
+  if (forwardedFor) return forwardedFor.split(',')[0].trim();
+  const realIP = req.headers.get('x-real-ip');
+  if (realIP) return realIP;
+  const cfConnectingIP = req.headers.get('cf-connecting-ip');
+  if (cfConnectingIP) return cfConnectingIP;
+  return 'unknown';
+};
+
 Deno.serve(async (req) => {
   const requestId = crypto.randomUUID();
-  console.log(`[${requestId}] Notion lead webhook request - Method: ${req.method}`);
+  const clientIP = getClientIP(req);
+  console.log(`[${requestId}] Notion lead webhook request - Method: ${req.method} - IP: ${clientIP}`);
 
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -19,6 +64,25 @@ Deno.serve(async (req) => {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   };
+
+  // Check rate limit
+  const rateLimit = checkRateLimit(clientIP);
+  if (!rateLimit.allowed) {
+    console.warn(`[${requestId}] Rate limit exceeded for IP: ${clientIP}`);
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: 'Too many submissions. Please wait a moment before trying again.'
+      }),
+      {
+        status: 429,
+        headers: {
+          ...corsHeaders,
+          'Retry-After': Math.ceil(rateLimit.resetIn / 1000).toString(),
+        },
+      }
+    );
+  }
 
   try {
     const notionApiKey = Deno.env.get('NOTION_API_KEY');
@@ -129,13 +193,15 @@ Deno.serve(async (req) => {
     const notionResult = await notionResponse.json();
 
     if (!notionResponse.ok) {
+      // Log full error server-side for debugging
       console.error(`[${requestId}] Notion API error:`, JSON.stringify(notionResult));
+      // Return generic error to client (don't expose Notion API details)
       return new Response(
         JSON.stringify({
           success: false,
-          error: `Notion API error: ${JSON.stringify(notionResult)}`
+          error: 'Failed to submit form. Please try again later.'
         }),
-        { status: notionResponse.status, headers: corsHeaders }
+        { status: 500, headers: corsHeaders }
       );
     }
 
@@ -150,11 +216,13 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
+    // Log full error server-side for debugging
     console.error(`[${requestId}] Error:`, error);
+    // Return generic error to client (don't expose internal details)
     return new Response(
       JSON.stringify({
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: 'Failed to submit form. Please try again later.'
       }),
       { status: 500, headers: corsHeaders }
     );
