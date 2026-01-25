@@ -200,11 +200,12 @@ Keep responses professional, concise, and within the boundaries defined above.`;
     );
 
   } catch (error) {
+    // Log full error server-side for debugging
     console.error(`[${requestId}] Error:`, error);
+    // Return generic error to client (don't expose internal details)
     return new Response(
-      JSON.stringify({ 
-        error: 'Failed to process message',
-        details: error.message
+      JSON.stringify({
+        error: 'Failed to process message. Please try again later.'
       }),
       {
         status: 500,

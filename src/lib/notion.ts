@@ -2,21 +2,32 @@
 const SUPABASE_URL = 'https://jjfzfktoyctxdqnzmvot.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqZnpma3RveWN0eGRxbnptdm90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNDE2NDYsImV4cCI6MjA4MzkxNzY0Nn0.jAeZyfMa0t-7YMeAodQ8q-jUyHF6dBqF591ITvCaArw';
 
-export const sendToNotion = async (data: any ) => {
+// Sanitize input to prevent injection attacks
+const sanitizeInput = (input: string | null | undefined): string | null => {
+  if (!input) return null;
+  // Remove potential script tags and HTML
+  return input
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<[^>]*>/g, '')
+    .trim()
+    .slice(0, 10000); // Limit length to prevent DoS
+};
+
+export const sendToNotion = async (data: any) => {
   console.log('Sending data to Notion via Edge Function:', data);
   
   try {
-    // Build payload with null for empty optional fields (Notion API requires null, not empty strings)
+    // Build payload with sanitized inputs and null for empty optional fields
     const payload: Record<string, string | null> = {
-      name: data.name,
-      email: data.email,
-      company: data.company || null,
-      message: data.message || (data.service ? `Appointment request for ${data.service} on ${data.date} at ${data.preferredTime}` : null),
-      phone: data.phone || null,
-      service: data.service || null,
-      preferredTime: data.preferredTime || null,
-      date: data.date || null,
-      industry: data.industry || null
+      name: sanitizeInput(data.name) || '',
+      email: sanitizeInput(data.email) || '',
+      company: sanitizeInput(data.company),
+      message: sanitizeInput(data.message) || (data.service ? `Appointment request for ${sanitizeInput(data.service)} on ${sanitizeInput(data.date)} at ${sanitizeInput(data.preferredTime)}` : null),
+      phone: sanitizeInput(data.phone),
+      service: sanitizeInput(data.service),
+      preferredTime: sanitizeInput(data.preferredTime),
+      date: sanitizeInput(data.date),
+      industry: sanitizeInput(data.industry)
     };
 
     console.log('Payload being sent:', payload);
